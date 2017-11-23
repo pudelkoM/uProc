@@ -1,12 +1,10 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
-#include <stdint.h>
 #include <errno.h>
-#include <ctype.h>
 #include <sys/time.h>
-#include <x86intrin.h>
 #include "options.h"
+#include <immintrin.h>
 
 
 int debug = 0;
@@ -17,40 +15,57 @@ unsigned long   *sizes;
 int no_sz = 1, no_ratio =1, no_version=1;
 
 
-#define likely(x)       __builtin_expect((x),1)
-#define unlikely(x)     __builtin_expect((x),0)
-
-static inline void rte_prefetch0(const volatile void *p)
-{
-        asm volatile ("prefetcht0 %[p]" : : [p] "m" (*(const volatile char *)p));
-}
-
 
 static inline
 double gettime(void) {
-	// to be implemented
-	uint64_t t = _rdtsc();
-	return t / 1000.;
+	struct timeval tv;
+  	gettimeofday(&tv, NULL);
+	return ( tv.tv_sec + tv.tv_usec / 1000000.0);
+}
+
+__m128i toupper_si128(__m128i src) {
+    __m128i lowerarr = _mm_sub_epi8(src, _mm_set1_epi8('a'+128));
+    __m128i notlittle   = _mm_cmpgt_epi8(lowerarr, _mm_set1_epi8(-128 + 25));
+
+    __m128i flip  = _mm_andnot_si128(notlittle, _mm_set1_epi8(0x20));
+
+    return          _mm_xor_si128(src, flip);
 }
 
 
 static void toupper_simple(char * text) {
+
 	while (*text) {
-		*text = toupper(*text);
-		++text;
+		if (*text >= 'a' && *text <= 'z') *text -= 0x20;
+		text++;
 	}
 }
 
-
 static void toupper_optimised(char * text) {
-	rte_prefetch0(text);
-	rte_prefetch0(text+64);
-	rte_prefetch0(text+128);
-	while (likely(*text)) {
-		if (*text >= 'a' && *text <= 'z')
-			*text = *text - 0x20;
-		++text;
-	}
+    int isnull;
+    while(1) {
+        __m128i sv = _mm_loadu_si128( (const __m128i*)text );
+
+        __m128i nullthere = _mm_cmpeq_epi8(_mm_setzero_si128(), sv);
+        isnull = _mm_movemask_epi8(nullthere);
+
+        if (isnull)
+            break;
+
+        __m128i upperc = toupper_si128(sv);
+
+        _mm_storeu_si128((__m128i*)text, upperc);
+        text += 16;
+    };
+
+    unsigned int bytes_left = ffs(isnull) - 1;
+    const char* last_byte = text + bytes_left;
+
+    if (bytes_left > 0) {
+            for (unsigned int i = 0 ; i <= bytes_left ; ++i) {
+        		if (text[i] >= 'a' && text[i] <= 'z') text[i] -= 0x20;
+            }
+    }
 }
 
 
