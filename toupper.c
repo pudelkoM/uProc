@@ -33,6 +33,16 @@ static inline double gettime(void) {
     return (ts.tv_sec + ts.tv_nsec / 1.0e9);
 }
 
+static void check_valid_toupper(const char *func_name, const char *text, size_t len) {
+    for (size_t i = 0; i < len; ++i) {
+        if (text[i] != toupper(text[i])) {
+            fprintf(stderr, "%s failed check at %zu: %c should be %c\n", func_name, i, text[i],
+                    toupper(text[i]));
+            abort();
+        }
+    }
+}
+
 static char upper(char c) {
     if (c >= 'a' && c <= 'z')
         return c - 0x20;
@@ -230,6 +240,7 @@ void run(int size, int ratio) {
         memcpy(text_copy, text, sizes[size]);
         int index = ratio + size * no_ratio + v * no_sz * no_ratio;
         run_toupper(text_copy, sizes[size], index, toupperversion[v].func, toupperversion[v].name);
+        check_valid_toupper(toupperversion[v].name, text_copy, sizes[size]);
         myfree(text_copy);
     }
     myfree(text);
