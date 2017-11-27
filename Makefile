@@ -13,6 +13,7 @@ VARIANTS += $(PROGRAM)_variant4
 
 ICC = icc -fsource-asm -fno-alias -lm $(sources)
 GCC = gcc -lm -march=native -Wall -fomit-frame-pointer $(sources)
+# GCC = gcc -lm -march=native -Wall -fno-omit-frame-pointer -fsanitize=address -g $(sources)
 $(PROGRAM)_variant1 = $(GCC) -O0
 $(PROGRAM)_variant2 = $(GCC) -O1
 $(PROGRAM)_variant3 = $(GCC) -O2

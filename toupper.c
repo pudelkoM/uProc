@@ -146,8 +146,21 @@ static void toupper_sse_1(char *text, size_t len) {
 
 // align at 16byte boundaries
 void *mymalloc(unsigned long int size) {
+#if defined(_ISOC11_SOURCE)
+    return aligned_alloc(16, size);
+#else
     void *addr = malloc(size + 32);
     return (void *)((unsigned long int)addr / 16 * 16 + 16);
+#endif
+}
+
+void myfree(void *ptr) {
+#if defined(_ISOC11_SOURCE)
+    free(ptr);
+#else
+    void *align_ptr = (void *)(((uintptr_t)ptr - 1) & ~0xfull);
+    free(align_ptr);
+#endif
 }
 
 char createChar(int ratio) {
@@ -182,22 +195,13 @@ char *init(unsigned long int sz, int ratio) {
 
 typedef void (*toupperfunc)(char *text, size_t n);
 
-void run_toupper(int size, int ratio, int version, toupperfunc f,
-                 const char *name) {
+void run_toupper(char *text, size_t len, int index, toupperfunc f, const char *name) {
     double start, stop;
-    int index;
-
-    index = ratio;
-    index += size * no_ratio;
-    index += version * no_sz * no_ratio;
-
-    char *text = init(sizes[size], ratios[ratio]);
-
     if (debug)
         printf("Before: %.40s...\n", text);
 
     start = gettime();
-    (*f)(text, sizes[size]);
+    (*f)(text, len);
     stop = gettime();
     results[index] = stop - start;
 
@@ -220,10 +224,15 @@ struct _toupperversion {
 
 void run(int size, int ratio) {
     int v;
+    char *text = init(sizes[size], ratios[ratio]);
     for (v = 0; toupperversion[v].func != 0; v++) {
-        run_toupper(size, ratio, v, toupperversion[v].func,
-                    toupperversion[v].name);
+        char *text_copy = mymalloc(sizes[size]);
+        memcpy(text_copy, text, sizes[size]);
+        int index = ratio + size * no_ratio + v * no_sz * no_ratio;
+        run_toupper(text_copy, sizes[size], index, toupperversion[v].func, toupperversion[v].name);
+        myfree(text_copy);
     }
+    myfree(text);
 }
 
 void printresults() {
@@ -232,14 +241,12 @@ void printresults() {
 
     for (j = 0; j < no_sz; j++) {
         for (k = 0; k < no_ratio; k++) {
-            printf("Size: %ld \tRatio: %f \tRunning time:\n", sizes[j],
-                   ratios[k]);
+            printf("Size: %ld \tRatio: %f \tRunning time:\n", sizes[j], ratios[k]);
             for (i = 0; i < no_version; i++) {
                 index = k;
                 index += j * no_ratio;
                 index += i * no_sz * no_ratio;
-                printf("\t%-8s:\t%9.5f \n", toupperversion[i].name,
-                       results[index]);
+                printf("\t%-8s:\t%9.5f \n", toupperversion[i].name, results[index]);
             }
             printf("\n");
         }
