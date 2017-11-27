@@ -7,6 +7,7 @@
 #include <stdlib.h>
 #include <string.h>
 #include <sys/time.h>
+#include <time.h>
 #include <x86intrin.h>
 
 int debug = 0;
@@ -24,9 +25,12 @@ static inline void rte_prefetch0(const volatile void *p) {
 }
 
 static inline double gettime(void) {
-    struct timeval tv;
-    gettimeofday(&tv, NULL);
-    return (tv.tv_sec + tv.tv_usec / 1000000.0);
+    struct timespec ts = {};
+    if (clock_gettime(CLOCK_MONOTONIC, &ts)) {
+        perror("getting time");
+        abort();
+    }
+    return (ts.tv_sec + ts.tv_nsec / 1.0e9);
 }
 
 static char upper(char c) {
@@ -48,7 +52,7 @@ static void toupper_naive(char *text, size_t len) {
     }
 }
 
-static void toupper_simple(char *text, size_t len) {
+static void toupper_library(char *text, size_t len) {
     while (*text) {
         *text = toupper(*text);
         ++text;
@@ -206,7 +210,7 @@ struct _toupperversion {
     toupperfunc func;
 } toupperversion[] = {
     {"naive", toupper_naive},
-    {"simple", toupper_simple},
+    {"library", toupper_library},
     {"loop", toupper_loop},
     {"unroll", toupper_unroll},
     {"sse", toupper_sse_1},
@@ -234,7 +238,7 @@ void printresults() {
                 index = k;
                 index += j * no_ratio;
                 index += i * no_sz * no_ratio;
-                printf("\t%s:\t%7.3f \n", toupperversion[i].name,
+                printf("\t%-8s:\t%9.5f \n", toupperversion[i].name,
                        results[index]);
             }
             printf("\n");
