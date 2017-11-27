@@ -11,13 +11,14 @@ VARIANTS += $(PROGRAM)_variant3
 VARIANTS += $(PROGRAM)_variant4 
 
 
-ICC = icc -fsource-asm -fno-alias -lm $(sources)
-GCC = gcc -lm -march=native -Wall -fomit-frame-pointer $(sources)
-# GCC = gcc -lm -march=native -Wall -fno-omit-frame-pointer -fsanitize=address -g $(sources)
-$(PROGRAM)_variant1 = $(GCC) -O0
-$(PROGRAM)_variant2 = $(GCC) -O1
-$(PROGRAM)_variant3 = $(GCC) -O2
-$(PROGRAM)_variant4 = $(GCC) -O3
+# CC = icc -fsource-asm -fno-alias -lm $(sources)
+CC = gcc -march=native -Wall -fomit-frame-pointer $(sources) -lm 
+# CC = gcc -march=native -Wall -fno-omit-frame-pointer -fsanitize=address -g $(sources) -lm
+# CC = clang -march=native -Wall -fomit-frame-pointer $(sources) -lm
+$(PROGRAM)_variant1 = $(CC) -O0
+$(PROGRAM)_variant2 = $(CC) -O1
+$(PROGRAM)_variant3 = $(CC) -O2
+$(PROGRAM)_variant4 = $(CC) -O3
 
 PARAMS = 80000
 
