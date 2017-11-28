@@ -12,7 +12,7 @@ VARIANTS += $(PROGRAM)_variant4
 
 
 # CC = icc -fsource-asm -fno-alias -lm $(sources)
-CC = gcc -march=native -Wall -fomit-frame-pointer $(sources) -lm 
+CC = gcc -march=native -mavx -mavx2 -Wall -fomit-frame-pointer $(sources) -lm 
 # CC = gcc -march=native -Wall -fno-omit-frame-pointer -fsanitize=address -g $(sources) -lm
 # CC = clang -march=native -Wall -fomit-frame-pointer $(sources) -lm
 $(PROGRAM)_variant1 = $(CC) -O0

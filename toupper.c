@@ -142,7 +142,62 @@ static void toupper_sse_1(char *text, size_t len) {
     };
 
     unsigned int bytes_left = ffs(isnull) - 1;
-    const char *last_byte = text + bytes_left;
+
+    if (bytes_left > 0) {
+        for (unsigned int i = 0; i <= bytes_left; ++i) {
+            if (text[i] >= 'a' && text[i] <= 'z')
+                text[i] -= 0x20;
+        }
+    }
+}
+
+//static void toupper_sse_2(char *text, size_t len) {
+//    for (size_t i = 0; i < len -16; i+= 16) {
+//        __m128i sv = _mm_load_si128((const __m128i *)text);
+//
+//        __m128i upperc = toupper_si128(sv);
+//
+//        _mm_store_si128((__m128i *)text, upperc);
+//        text += 16;
+//    };
+//
+//    unsigned int bytes_left = (len % 16) - 1;
+//
+//    if (bytes_left > 0) {
+//        for (unsigned int i = 0; i <= bytes_left; ++i) {
+//            if (text[i] >= 'a' && text[i] <= 'z')
+//                text[i] -= 0x20;
+//        }
+//    }
+//}
+
+static __m256i toupper_si256(__m256i src) {
+    __m256i lowerarr = _mm256_sub_epi8(src, _mm256_set1_epi8('a' + 128));
+    __m256i notlittle = _mm256_cmpgt_epi8(lowerarr, _mm256_set1_epi8(-128 + 25));
+
+    __m256i flip = _mm256_andnot_si256(notlittle, _mm256_set1_epi8(0x20));
+
+    return _mm256_xor_si256(src, flip);
+}
+
+static void toupper_avx_1(char *text, size_t len) {
+    int isnull;
+    while (1) {
+		__m256i sv = _mm256_loadu_si256((const __m256i *)text);
+
+        __m256i nullthere = _mm256_cmpeq_epi8(_mm256_setzero_si256(), sv);
+        isnull = _mm256_movemask_epi8(nullthere);
+
+        if (isnull)
+            break;
+
+		__m256i upperc = toupper_si256(sv);
+
+		_mm256_storeu_si256((__m256i *) text, upperc);
+		text +=32;
+	}
+
+    unsigned int bytes_left = ffs(isnull) - 1;
 
     if (bytes_left > 0) {
         for (unsigned int i = 0; i <= bytes_left; ++i) {
@@ -228,6 +283,8 @@ struct _toupperversion {
     {"loop", toupper_loop},
     {"unroll", toupper_unroll},
     {"sse", toupper_sse_1},
+	//{"sse_len", toupper_sse_2},
+	{"avx", toupper_avx_1},
     {"prefetch", toupper_prefetch_branch},
     {NULL, NULL},
 };
