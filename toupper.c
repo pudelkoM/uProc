@@ -20,16 +20,6 @@ int no_sz = 1, no_ratio = 1, no_version = 1;
 #define likely(x) __builtin_expect((x), 1)
 #define unlikely(x) __builtin_expect((x), 0)
 
-/* with the MIN_SCALE_FACT we can check the input if it
- * fits to the size of our vector instructions */
-#if defined(__AVX2__)
-#define MIN_SCALE_FACTOR 32
-#elif defined(__SSE2__)
-#define MIN_SCALE_FACTOR 16
-#elif defined(__MMX__)
-#define MIN_SCALE_FACTOR 8
-#endif
-
 static inline void rte_prefetch0(const volatile void *p) {
     asm volatile("prefetcht0 %[p]" : : [p] "m"(*(const volatile char *)p));
 }
@@ -147,7 +137,7 @@ static void toupper_prefetch_branch(char *text, size_t len) {
 
 #if defined(__SSE2__)
 static __m128i toupper_si128(__m128i src) {
-    __m128i lowerarr = _mm_sub_epi8(src, _mm_set1_epi8('a' + 128));
+    __m128i lowerarr = _mm_sub_epi8(src, _mm_set1_epi8('a' + (char)128));
     __m128i notlittle = _mm_cmpgt_epi8(lowerarr, _mm_set1_epi8(-128 + 25));
 
     __m128i flip = _mm_andnot_si128(notlittle, _mm_set1_epi8(0x20));
@@ -188,6 +178,7 @@ static void toupper_sse_1(char *text, size_t len) {
 void toupper_neon(char *text, size_t len) {
     int8x16_t sv, lowerarr, notlittle, flip;
     size_t i;
+
     for (i = 0; i < (len / NEON_REG_SIZE); i++, text += NEON_REG_SIZE) {
         sv = vld1q_s8(text);
         lowerarr = vsubq_s8(sv, vdupq_n_s8('a' + (int8_t)128));
@@ -204,7 +195,6 @@ void toupper_neon(char *text, size_t len) {
 static void toupper_mmx(char *text, size_t len) {
     __m64 sv, lowerarr, notlittle, flip;
     size_t i;
-
     for (i = 0; i < (len / MMX_REG_SIZE); i++, text += MMX_REG_SIZE) {
         sv = _m_from_int64(*((int64_t *)text));
 
@@ -356,7 +346,7 @@ https://software.intel.com/sites/landingpage/IntrinsicsGuide/#expand=3D4644,4090
  */
 #endif
 #if defined(__SSE2__)
-    {"sse1", toupper_sse_1},
+    {"sse2,rest", toupper_sse_1},
     {"sse2", toupper_sse},
 #endif
 #if defined(__SSE3__)
@@ -377,7 +367,7 @@ https://software.intel.com/sites/landingpage/IntrinsicsGuide/#expand=3D4644,4090
  */
 #endif
 #if defined(__AVX2__)
-    {"avx", toupper_avx_1},
+    {"avx2", toupper_avx_1},
 #endif
 #if defined(__x86_64__)
     {"prefetch", toupper_prefetch_branch},
@@ -392,7 +382,7 @@ static void run(int size, int ratio) {
     int v;
     char *text = init(sizes[size], ratios[ratio]);
     for (v = 0; toupperversion[v].func != 0; v++) {
-        char *text_copy = mymalloc(sizes[size]);
+        char *text_copy = mymalloc(sizes[size] + 1);
         memcpy(text_copy, text, sizes[size] + 1);
         int index = ratio + size * no_ratio + v * no_sz * no_ratio;
         run_toupper(text_copy, sizes[size], index, toupperversion[v].func, toupperversion[v].name);
@@ -420,11 +410,16 @@ static void printresults() {
     }
 }
 
+/* with the MIN_SCALE_FACT we can check the input if it
+ * fits to the size of our vector instructions */
+#define MIN_SCALE_FACTOR 64
+
 int main(int argc, char *argv[]) {
     unsigned long int min_sz = 800000, max_sz = 0, step_sz = 10000;
     int min_ratio = 50, max_ratio = 0, step_ratio = 1;
     int arg, i, j, v;
     int no_exp;
+    uint64_t rest;
 
     for (arg = 1; arg < argc; arg++) {
         if (0 == strcmp("-d", argv[arg])) {
@@ -432,14 +427,23 @@ int main(int argc, char *argv[]) {
         }
         if (0 == strcmp("-l", argv[arg])) {
             min_sz = atoi(argv[arg + 1]);
+            if ((rest = min_sz % MIN_SCALE_FACTOR))
+                min_sz += (MIN_SCALE_FACTOR - rest);
+
             if (arg + 2 >= argc)
                 break;
             if (0 == strcmp("-r", argv[arg + 2]))
                 break;
             if (0 == strcmp("-d", argv[arg + 2]))
                 break;
+
             max_sz = atoi(argv[arg + 2]);
+            if ((rest = max_sz % MIN_SCALE_FACTOR))
+                max_sz += (MIN_SCALE_FACTOR - rest);
+
             step_sz = atoi(argv[arg + 3]);
+            if ((rest = step_sz % MIN_SCALE_FACTOR))
+                step_sz += (MIN_SCALE_FACTOR - rest);
         }
         if (0 == strcmp("-r", argv[arg])) {
             min_ratio = atoi(argv[arg + 1]);

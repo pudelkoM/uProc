@@ -1,7 +1,7 @@
 .PHONY:exe 
 
 PROGRAM = toupper
-SHELL := /bin/bash
+SHELL := /bin/sh
 
 sources = $(PROGRAM).c
 
@@ -9,12 +9,11 @@ VARIANTS = $(PROGRAM)_variant1
 VARIANTS += $(PROGRAM)_variant2
 VARIANTS += $(PROGRAM)_variant3
 VARIANTS += $(PROGRAM)_variant4
-VARIANTS += $(PROGRAM)_variant5
 
 
-CC = gcc
+#CC = gcc
 # CC = icc -fsource-asm -fno-alias -lm 
-# CC = clang
+CC = clang
 
 CFLAGS = -march=native -Wall -std=gnu11 -fomit-frame-pointer -lm
 CFLAGS_DEBUG = -march=native -Wall -std=gnu11 -fno-omit-frame-pointer -fsanitize=address -g -lm
@@ -23,7 +22,6 @@ $(PROGRAM)_variant1 = $(CC) $(CFLAGS) -O0 $(sources)
 $(PROGRAM)_variant2 = $(CC) $(CFLAGS) -O1 $(sources)
 $(PROGRAM)_variant3 = $(CC) $(CFLAGS) -O2 $(sources)
 $(PROGRAM)_variant4 = $(CC) $(CFLAGS) -O3 $(sources)
-$(PROGRAM)_variant5 = $(CC) $(CFLAGS) -flto -O3 $(sources)
 
 PARAMS = 80000
 
