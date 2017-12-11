@@ -1,0 +1,60 @@
+VARIANT1: clang -march=native -Wall -std=gnu11 -fomit-frame-pointer -lm -O0 toupper.c
+Size: 500000000         Ratio: 50.000000        Running time:
+        naive,fn,no size:        13.23477 
+        naive,define,no size:    11.54498 
+        library,no size :         4.12153 
+        library,size    :         4.55055 
+        loop,fn         :        12.48997 
+        loop,define     :        10.28126 
+        unroll          :        11.99537 
+        mmx             :         5.36557 
+        sse2,rest       :         1.12321 
+        sse2            :         0.83172 
+        avx2            :         0.54202 
+        prefetch        :        14.39029 
+
+VARIANT2: clang -march=native -Wall -std=gnu11 -fomit-frame-pointer -lm -O1 toupper.c
+Size: 500000000         Ratio: 50.000000        Running time:
+        naive,fn,no size:         7.64533 
+        naive,define,no size:     5.76942 
+        library,no size :         0.98504 
+        library,size    :         0.68589 
+        loop,fn         :         6.94722 
+        loop,define     :         6.25748 
+        unroll          :         6.91437 
+        mmx             :         0.13076 
+        sse2,rest       :         0.15911 
+        sse2            :         0.09811 
+        avx2            :         0.09938 
+        prefetch        :         8.14831 
+
+VARIANT3: clang -march=native -Wall -std=gnu11 -fomit-frame-pointer -lm -O2 toupper.c
+Size: 500000000         Ratio: 50.000000        Running time:
+        naive,fn,no size:         6.14036 
+        naive,define,no size:     6.56514 
+        library,no size :         0.98387 
+        library,size    :         0.67095 
+        loop,fn         :         0.09290 
+        loop,define     :         0.09347 
+        unroll          :         6.38676 
+        mmx             :         0.19312 
+        sse2,rest       :         0.10748 
+        sse2            :         0.09519 
+        avx2            :         0.09257 
+        prefetch        :         5.77232 
+
+VARIANT4: clang -march=native -Wall -std=gnu11 -fomit-frame-pointer -lm -O3 toupper.c
+Size: 500000000         Ratio: 50.000000        Running time:
+        naive,fn,no size:         5.76379 
+        naive,define,no size:     6.52119 
+        library,no size :         0.98385 
+        library,size    :         0.67125 
+        loop,fn         :         0.09277 
+        loop,define     :         0.09332 
+        unroll          :         6.12697 
+        mmx             :         0.12018 
+        sse2,rest       :         0.10729 
+        sse2            :         0.09546 
+        avx2            :         0.09237 
+        prefetch        :         5.76455 
+

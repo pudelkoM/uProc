@@ -1,0 +1,60 @@
+VARIANT1: gcc -march=native -Wall -std=gnu11 -fomit-frame-pointer -lm -O0 toupper.c
+Size: 500000000         Ratio: 50.000000        Running time:
+        naive,fn,no size:        12.40916 
+        naive,define,no size:    10.79240 
+        library,no size :         4.16875 
+        library,size    :         4.17139 
+        loop,fn         :        12.02479 
+        loop,define     :        10.04142 
+        unroll          :        11.13076 
+        mmx             :         3.26801 
+        sse2,rest       :         3.95606 
+        sse2            :         3.31191 
+        avx2            :         5.29254 
+        prefetch        :        12.30004 
+
+VARIANT2: gcc -march=native -Wall -std=gnu11 -fomit-frame-pointer -lm -O1 toupper.c
+Size: 500000000         Ratio: 50.000000        Running time:
+        naive,fn,no size:         1.06542 
+        naive,define,no size:     1.06546 
+        library,no size :         0.74299 
+        library,size    :         0.67118 
+        loop,fn         :         1.05848 
+        loop,define     :         1.05375 
+        unroll          :         0.87301 
+        mmx             :         0.16080 
+        sse2,rest       :         0.10934 
+        sse2            :         0.09814 
+        avx2            :         0.09316 
+        prefetch        :         1.08209 
+
+VARIANT3: gcc -march=native -Wall -std=gnu11 -fomit-frame-pointer -lm -O2 toupper.c
+Size: 500000000         Ratio: 50.000000        Running time:
+        naive,fn,no size:         1.29400 
+        naive,define,no size:     1.36909 
+        library,no size :         0.64223 
+        library,size    :         0.64462 
+        loop,fn         :         1.03419 
+        loop,define     :         1.03367 
+        unroll          :         0.87803 
+        mmx             :         0.15233 
+        sse2,rest       :         0.10865 
+        sse2            :         0.09987 
+        avx2            :         0.09270 
+        prefetch        :         1.11125 
+
+VARIANT4: gcc -march=native -Wall -std=gnu11 -fomit-frame-pointer -lm -O3 toupper.c
+Size: 500000000         Ratio: 50.000000        Running time:
+        naive,fn,no size:         1.11267 
+        naive,define,no size:     1.11417 
+        library,no size :         0.64296 
+        library,size    :         0.64527 
+        loop,fn         :         0.09317 
+        loop,define     :         0.09025 
+        unroll          :         0.90001 
+        mmx             :         0.15171 
+        sse2,rest       :         0.10913 
+        sse2            :         0.09689 
+        avx2            :         0.09336 
+        prefetch        :         1.11220 
+
