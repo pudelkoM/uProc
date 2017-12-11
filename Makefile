@@ -6,19 +6,24 @@ SHELL := /bin/bash
 sources = $(PROGRAM).c
 
 VARIANTS = $(PROGRAM)_variant1
-VARIANTS += $(PROGRAM)_variant2 
-VARIANTS += $(PROGRAM)_variant3 
-VARIANTS += $(PROGRAM)_variant4 
+VARIANTS += $(PROGRAM)_variant2
+VARIANTS += $(PROGRAM)_variant3
+VARIANTS += $(PROGRAM)_variant4
+VARIANTS += $(PROGRAM)_variant5
 
 
-# CC = icc -fsource-asm -fno-alias -lm $(sources)
-CC = gcc -march=native -mavx -mavx2 -Wall -fomit-frame-pointer $(sources) -lm 
-# CC = gcc -march=native -Wall -fno-omit-frame-pointer -fsanitize=address -g $(sources) -lm
-# CC = clang -march=native -Wall -fomit-frame-pointer $(sources) -lm
-$(PROGRAM)_variant1 = $(CC) -O0
-$(PROGRAM)_variant2 = $(CC) -O1
-$(PROGRAM)_variant3 = $(CC) -O2
-$(PROGRAM)_variant4 = $(CC) -O3
+CC = gcc
+# CC = icc -fsource-asm -fno-alias -lm 
+# CC = clang
+
+CFLAGS = -march=native -Wall -std=gnu11 -fomit-frame-pointer -lm
+CFLAGS_DEBUG = -march=native -Wall -std=gnu11 -fno-omit-frame-pointer -fsanitize=address -g -lm
+
+$(PROGRAM)_variant1 = $(CC) $(CFLAGS) -O0 $(sources)
+$(PROGRAM)_variant2 = $(CC) $(CFLAGS) -O1 $(sources)
+$(PROGRAM)_variant3 = $(CC) $(CFLAGS) -O2 $(sources)
+$(PROGRAM)_variant4 = $(CC) $(CFLAGS) -O3 $(sources)
+$(PROGRAM)_variant5 = $(CC) $(CFLAGS) -flto -O3 $(sources)
 
 PARAMS = 80000
 
