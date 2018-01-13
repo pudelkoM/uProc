@@ -19,6 +19,9 @@ $(PROGRAM)_variant1 = $(CC) $(CFLAGS) -O3 $(sources)
 $(PROGRAM)_variant_max = $(CC) $(CFLAGS) -O3 stride-max.c
 $(PROGRAM)_variant_max_debug = $(CC) $(CFLAGS_DEBUG) -O1 stride-max.c
 
+cache_size = $(CC) $(CFLAGS) -O3 size.c
+cache_size_debug = $(CC) $(CFLAGS_DEBUG) -O1 size.c
+
 #############################################################################################
 
 
@@ -38,6 +41,14 @@ $(PROGRAM)_variant_max: stride-max.c Makefile
 $(PROGRAM)_variant_max_debug: stride-max.c Makefile
 	$($(PROGRAM)_variant_max_debug) -S -o $(PROGRAM)_variant_max_debug.s
 	$($(PROGRAM)_variant_max_debug) -o $(PROGRAM)_variant_max_debug
+
+cache_size: size.c Makefile
+	$(cache_size) -S -o cache_size.s
+	$(cache_size) -o cache_size
+
+cache_size_debug: size.c Makefile
+	$(cache_size_debug) -S -o cache_size_debug.s
+	$(cache_size_debug) -o cache_size_debug
 
 .autoclean: Makefile
 	make clean
